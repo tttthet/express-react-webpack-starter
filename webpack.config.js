@@ -47,7 +47,23 @@ const frontendBuild = (name, entryFile, outputFile) => ({
         path: __dirname + '/dist/www',
         filename: outputFile
     },
-    module: moduleConfig({ target: 'ES6', module: 'ES6' }),
+    module: {
+        rules: [{
+	    test: /\.css$/i,
+	    use: ['style-loader', 'css-loader']
+	},{
+            test: /\.(ts|tsx)$/,
+            include: includeDirs,
+            use: [{
+                loader: 'ts-loader',
+                options: {
+                    compilerOptions: {
+                        target: 'ES6', module: 'ES6'
+                    }
+                }
+            }]
+        }]
+    },
     mode: 'development',
     devtool: 'cheap-module-eval-source-map',
     resolve: resolveConfig,

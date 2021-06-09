@@ -1,0 +1,208 @@
+:root {
+  --header-heigth: 100px;
+}
+* {
+  font-family: sans-serif;
+}
+html, body, #main, section {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background-color: lightskyblue;
+  opacity: 0.85;
+}
+#main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  display: flex;
+  flex: 1;
+  border-top: 5px dashed lightskyblue;
+}
+main > div:first-child {
+  min-width: 20%;
+  border-top: 5px dashed lightskyblue;
+  border-right: 5px dashed lightskyblue;
+  border-top-right-radius: 3rem;
+  background-color: #999;
+}
+main > div:first-child ul {
+  list-style: none;
+}
+main > div:first-child > ul {
+  margin: 40px 0 0;
+}
+main > div:first-child > ul ul {
+  padding-left: 20px;
+}
+main > div:first-child ul li {
+  padding: 3px 0;
+}
+main > div:first-child ul li p {
+  padding-top: 2px;
+}
+main > div:first-child ul li p:hover {
+  cursor: pointer;
+}
+main > div:first-child ul p {
+  margin: 0;
+  display: inline-block;
+  padding-left: 8px;
+}
+main > div:last-child {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  border-top-left-radius: 3rem;
+  background-color: #999;
+}
+main > div:last-child > div > p:last-child {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+  margin: 0;
+}
+main > div:last-child p:last-child > span {
+  opacity: 0.5;
+  padding-right: 3rem;
+}
+main > div:last-child > div {
+  width: 400px;
+  padding: 3rem;
+  margin-top: 300px;
+}
+main > div > p {
+  border-bottom: 1px solid black;
+  padding-bottom: 1rem;
+  border-radius: 5px;
+}
+header {
+  display: flex;
+  height: var(--header-heigth);
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -5px;
+}
+header > div {
+  padding: 1rem 4rem 0 2rem;
+}
+nav {
+  margin: 3rem;
+  padding: 3rem;
+  background-color: #ddd;
+}  
+section {
+  flex: 1;
+  overflow: auto;
+  height: calc(100vh - var(--header-heigth));
+  width: 100%;
+  text-align: center;
+  border-top: 5px dashed lightskyblue;
+  border-top-left-radius: 3rem;
+  background-color: #999;
+}
+section::-webkit-scrollbar {
+  background-color: #999;
+}
+section > ul {
+  padding: 50px 3rem;
+  list-style: none;
+}
+section > ul > li {
+  display: flex;
+  height: 20px;
+  justify-content: space-between;
+  align-items: center;
+}
+input[type=radio] {
+  margin: 0 5px;
+  border: none;
+  border-radius: 1rem;
+  background-color: #eee;
+}
+input[type=text] {
+  margin: 1rem;
+  padding: 5px 12px;
+  border: 1px solid #999;
+  border-radius: 1rem;
+  background-color: #eee;
+}
+input[type=text].error {
+  background-color: #f99;
+}
+label.error {
+  color: #f99;
+  font-weight: bold;
+}
+button {
+  border: none;
+  padding: 5px 10px;
+  background-color: #ccc;
+  font-size: 1rem;
+  border: 5px dashed lightskyblue;
+  border-radius: 25px;
+}
+button:hover {
+  background-color: #c0c0c0;
+}
+.icon::before {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  opacity: 0.5;
+  zoom: 1.25;
+}
+.openIcon::before {
+  content: "\f65d";
+}
+.closeIcon::before {
+  content: "\f07b";
+}
+.fileIcon::before {
+  content: '\f15c';
+  margin-left: 3px;
+}
+.isScrollable {
+  flex: 1;
+  overflow: auto;
+  overflow: auto;
+  height: 800px;
+  padding-top: 1.25rem;
+}
+.isScrollable::-webkit-scrollbar {
+  background-color: #999;
+}
+/* TODO mobile layout would utilize a popup for displaying file info
+.popup {
+  position: relative;
+  background-color: yellow;
+  width: 80%;
+  height: 80%;
+  border: 10px solid green;
+  box-sizing: border-box;
+}
+.popup > button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1rem;
+  background-color: red;
+}
+.overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+  width: 100%;
+  height: 100%;
+  border: 10px solid transparent;
+  box-sizing: border-box;
+}*/
