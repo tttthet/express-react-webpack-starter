@@ -169,7 +169,7 @@ export class App extends React.Component<{}, AppState> {
     function lots(begin: number) {
       const items = []
 
-      for (let i = 0; i <= 299; i++) {
+      for (let i = 0; i <= 9999; i++) {
 	items.push({
 	  id: begin + i,
 	  name: 'file' + begin + i,
