@@ -35,19 +35,19 @@ interface FileSystemState {
 }
 
 export class FileSystem extends React.Component<FileSystemProps, FileSystemState> {
+
   private readonly COUNT: number;
   private currentScrollTop: number;
   private init: boolean;
-  public scrollRef: RefObject<HTMLUListElement>;
-  public iconRef: RefObject<HTMLLIElement>;
-  public isScrollable: boolean;
   private pinToBottom: boolean;
+
+  public scrollRef: RefObject<HTMLUListElement>;
+  public isScrollable: boolean;
 
   constructor(props: FileSystemProps) {
     super(props);
 
     this.scrollRef = React.createRef();
-    this.iconRef = React.createRef();
     this.COUNT = 100;
     this.currentScrollTop = 20;
     this.init = false;
@@ -164,17 +164,17 @@ export class FileSystem extends React.Component<FileSystemProps, FileSystemState
 	<li><em>Empty</em></li>
 	}
         {items && items.map(child => (
-	  <li key={child.id} ref={this.iconRef} className={`icon ${child._type === TYPES.FILE ? 'fileIcon' : (child as Directory).isOpen ? 'openIcon' : 'closeIcon'}`}>
-	      <p onClick={e => this.onClick(e, child.id, child)}>{child.name}</p>
+	  <li key={child.id} className={`icon ${child._type === TYPES.FILE ? 'fileIcon' : (child as Directory).isOpen ? 'openIcon' : 'closeIcon'}`}>
+	    <p onClick={e => this.onClick(e, child.id, child)}>{child.name}</p>
 	      {selected[child.id] &&
-	      <FileSystem
-	        list={child['children']}// TS2339
-	        selected={selected[child.id]}
-	        onSelect={(id, children) => this.onSelected(id, children)}
-	        iNode={iNode}
-	      />
-	      }
-	    </li>
+	    <FileSystem
+	      list={child['children']}// TS2339
+	      selected={selected[child.id]}
+	      onSelect={(id, children) => this.onSelected(id, children)}
+	      iNode={iNode}
+	    />
+	    }
+	  </li>
 	))}
       </ul>
     );
@@ -195,14 +195,6 @@ export class FileSystem extends React.Component<FileSystemProps, FileSystemState
     if (child._type === TYPES.DIR) {
       child = child as Directory;
       child.isOpen = !child.isOpen;
-
-      if (this.state.isDirectoryOpen) {
-	this.iconRef.current.classList.add('openIcon');
-	this.iconRef.current.classList.remove('closeIcon');
-      } else {
-	this.iconRef.current.classList.add('closeIcon');
-	this.iconRef.current.classList.remove('openIcon');
-      }
     }
 
     this.setState({

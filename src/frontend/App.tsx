@@ -1,7 +1,7 @@
 import React, { RefObject } from 'react';
 import { render } from 'react-dom';
 import './style.css';
-import { Content, FileSystem, Directory, File, TYPES, Header, HeaderProps, FileDescriptor } from './';
+import { Content, FileSystem, Directory, File, TYPES, Header, HeaderProps, FileDescriptor, buildMock } from './';
 
 interface AppState {
   iNode: Directory | File | null;// TODO normlalize
@@ -13,14 +13,17 @@ interface AppState {
   newINodeName: string;
 }
 
-export class App extends React.Component<{}, AppState> {
+export class App extends React.Component<{ directoryCount: number }, AppState> {
 
   private scrollRef: RefObject<HTMLDivElement>;
+  private INIT_DIRECTORY_COUNT: number;
 
   constructor(props: any) {
     super(props);
 
-    const fileSystem = this.buildMock(5);
+    //const fileSystem = this.buildMock(5);
+    const fileSystem = buildMock(5);
+    this.INIT_DIRECTORY_COUNT = props.directoryCount;
     this.scrollRef = React.createRef();
     this.state = {
       currentDirectory: fileSystem[0] as Directory,// TODO dependency, need to support edge cases
@@ -43,7 +46,7 @@ export class App extends React.Component<{}, AppState> {
     }
 
     const HProps: HeaderProps = {
-      initValue: 3,
+      initValue: this.INIT_DIRECTORY_COUNT,
       start: this.start.bind(this),
       createNewINode: this.createNewINode.bind(this)
     }
@@ -96,7 +99,11 @@ export class App extends React.Component<{}, AppState> {
 
   // TODO i broke it!
   public start(initValue: number): void {
-    const fileSystem = this.buildMock(initValue);
+    //const fileSystem = this.buildMock(this.INIT_DIRECTORY_COUNT);
+    const fileSystem = buildMock(initValue);
+
+    console.log('stat', initValue);
+    console.log('fileSystem', fileSystem);
 
     this.setState({fileSystem});
   }
@@ -110,7 +117,7 @@ export class App extends React.Component<{}, AppState> {
     });
   }
 
-  private buildMock(init: number): Directory[] | null {
+/*  private buildMock(initValue: number): Directory[] | null {
     let k = 0;
 
     function lots(begin: number) {
@@ -152,27 +159,10 @@ export class App extends React.Component<{}, AppState> {
 	}
       });
     })(init);
-  }
+  }*/
 }
 
-const getRandomDate = (): Date => new Date(Date.now() - Math.ceil(Math.random() * 100000000000));
-
-// TODO types
-/*const File = (props: { file: File }) => {
-  const { file } = props;
-  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' } as const;
-
-  return (
-    <div>
-      <div>
-        <p>{file.name}</p>
-      <p><span style={{opacity:'0.75'}}>last modified</span>{file.lastModified.toLocaleDateString("en-US", options)}</p>
-      </div>
-    </div>
-  )
-}
-*/
-export function start() {
+export function start(count: number) {
   const rootElem = document.getElementById('main');
-  render(<App />, rootElem);
+  render(<App directoryCount={count} />, rootElem);
 }

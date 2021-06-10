@@ -95,6 +95,10 @@ header {
 header > div {
   padding: 1rem 4rem 0 2rem;
 }
+header > div > p {
+  margin: 0 0 0 10px;
+  font-size: x-small;
+}
 nav {
   margin: 3rem;
   padding: 3rem;
@@ -154,6 +158,14 @@ button {
 button:hover {
   background-color: #c0c0c0;
 }
+.file-context {
+  display: flex;
+  justify-content: center;
+}
+.file-context > .icon {
+  font-size: 13rem;
+  margin: 0 auto;
+}
 .icon::before {
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
@@ -181,7 +193,6 @@ button:hover {
   overflow: auto;
   overflow: auto;
   height: 800px;
-  padding-top: 1.25rem;
 }
 .isScrollable::-webkit-scrollbar {
   background-color: #999;

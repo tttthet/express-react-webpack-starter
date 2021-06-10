@@ -45,17 +45,23 @@ export const Header = (props: HeaderProps): JSX.Element => {
     setName
   } as INodeInputProps;
 
+  const setType = (event: any) => {
+    setNewINodeType(event.target.name);
+    setHasINodeTypeError(false);
+  }
+
   return (
     <header>
       <div>
+        <p>Number of directories at root, children are decremented until empty</p>
         <button onClick={() => props.start(initValue)}>Start!</button>
         <input type="text" value={initValue} onChange={e => setInitValue(+e.target.value)} placeholder={'Directory size'}/>
       </div>
       <div>
-      <label ref={newINodeNameTypeFileRef} className={getClassName()}>File</label>
-        <input type="radio" name="0" checked={+newINodeType === 0} value={newINodeType} onChange={(event: any) => setNewINodeType(event.target.name)} />
+        <label ref={newINodeNameTypeFileRef} className={getClassName()}>File</label>
+        <input type="radio" name="0" checked={newINodeType === '0'} value={newINodeType} onChange={setType} />
         <label ref={newINodeNameTypeDirRef} className={getClassName()}>Dir</label>
-        <input type="radio"name="1" checked={+newINodeType === 1} value={newINodeType} onChange={(event: any) => setNewINodeType(event.target.name)} />
+        <input type="radio"name="1" checked={newINodeType === '1'} value={newINodeType} onChange={setType} />
         <INodeInput {...nameInputProps} />
         <button onClick={() => createNew()}>createNewINode</button>
       </div>

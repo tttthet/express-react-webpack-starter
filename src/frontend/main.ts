@@ -1,3 +1,3 @@
 import { start } from "./App";
 
-start();
+start(5);
