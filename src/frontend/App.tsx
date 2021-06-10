@@ -1,11 +1,11 @@
-import React, { RefObject, ChangeEvent } from 'react';
+import React, { RefObject } from 'react';
 import { render } from 'react-dom';
 import './style.css';
-import { Content, Nav, Directory, File, TYPES } from './';
+import { Content, FileSystem, Directory, File, TYPES, Header, HeaderProps, FileDescriptor } from './';
 
 interface AppState {
-  iNode: Directory | File | null;// TODO normlalize 
-  currentDirectory: Directory;// TODO normlalize 
+  iNode: Directory | File | null;// TODO normlalize
+  currentDirectory: Directory;// TODO normlalize
   selected: any;// TODO type this
   initValue: number;
   fileSystem: Directory[];
@@ -16,20 +16,12 @@ interface AppState {
 export class App extends React.Component<{}, AppState> {
 
   private scrollRef: RefObject<HTMLDivElement>;
-  private newINodeNameRef: RefObject<HTMLInputElement>;
-  private newINodeNameTypeFileRef: RefObject<HTMLLabelElement>;
-  private newINodeNameTypeDirRef: RefObject<HTMLLabelElement>;
 
   constructor(props: any) {
     super(props);
 
     const fileSystem = this.buildMock(5);
-
     this.scrollRef = React.createRef();
-    this.newINodeNameRef = React.createRef();
-    this.newINodeNameTypeFileRef = React.createRef();
-    this.newINodeNameTypeDirRef = React.createRef();
-
     this.state = {
       currentDirectory: fileSystem[0] as Directory,// TODO dependency, need to support edge cases
       iNode: fileSystem[0],// TODO dependency, need to support edge cases
@@ -40,88 +32,43 @@ export class App extends React.Component<{}, AppState> {
       newINodeName: ''
     }
   }
-  
+
   render() {
-    const navProps = {
-      onSelect: (id: number, dir: Directory, selected: any) => this.onSelectDirectory(dir, selected),
+
+    const fileSystemvProps = {
+      onSelect: (id: number, dir: Directory, selected: any): void => this.onSelectDirectory(dir, selected),
       list: this.state.fileSystem,
       iNode: this.state.iNode,
       selected: this.state.selected,
     }
+
+    const HProps: HeaderProps = {
+      initValue: 3,
+      start: this.start.bind(this),
+      createNewINode: this.createNewINode.bind(this)
+    }
+
     const { iNode } = this.state;
 
     return (
       <>
-	<header>
-	  <div>
-            <button onClick={() => this.start()}>Start!</button>
-	    <input type="text" value={this.state.initValue} onChange={e => this.setState({initValue: +e.target.value})} placeholder={'Directory size'}/>
-	  </div>
-	  <div>
-	  <label ref={this.newINodeNameTypeFileRef}>File</label>
-	  <input type="radio" name="0" checked={+this.state.newINodeType === 0} value={this.state.newINodeType} onChange={(event: ChangeEvent) => this.setNewINodeType(event, 'type')} />
-	  <label ref={this.newINodeNameTypeDirRef}>Dir</label>
-	  <input type="radio"name="1" checked={+this.state.newINodeType === 1} value={this.state.newINodeType} onChange={(event: ChangeEvent) => this.setNewINodeType(event, 'type')} />
-	  <input type="text" ref={this.newINodeNameRef} value={this.state.newINodeName} onChange={(event: ChangeEvent) => this.onInputChange(event)} placeholder={'Directory or file name'}/>
-          <button onClick={() => this.createNewINode()}>createNewINode</button>
-	</div>
-	</header>
+	<Header {...HProps} />
 	<main>
           <div ref={this.scrollRef}>
-	    <Nav {...navProps}/>
+	    <FileSystem {...fileSystemvProps}/>
 	  </div>
 	  {iNode._type === TYPES.DIR &&
 	    <Content dir={iNode as Directory} />
 	  }
           {iNode._type === TYPES.FILE &&
-	    <FileDesc file={iNode as File} />
+	    <FileDescriptor file={iNode as File} />
 	  }
         </main>
       </>
     );
   }
 
-  private onInputChange(event: any): void {
-    // sync input field
-    this.setState({newINodeName: event.target.value})
-
-    // remove error highlight
-    this.newINodeNameRef.current.classList.remove('error');
-  }
-
-  private setNewINodeType(event: any, property: string): void {
-    // turn off error highlights
-    if (property === 'type') {
-      this.newINodeNameTypeFileRef.current.classList.remove('error');
-      this.newINodeNameTypeDirRef.current.classList.remove('error');
-    } else {
-      this.newINodeNameRef.current.classList.remove('error');
-    }
-
-    this.setState({
-      newINodeType: event.target.name
-    });
-  }
-
-  private createNewINode(): void {
-    const { newINodeType, newINodeName } = this.state;
-
-    // TODO modern notifications UX
-    let hasError = false;
-    if (newINodeType === '') {
-      this.newINodeNameTypeFileRef.current.classList.add('error');
-      this.newINodeNameTypeDirRef.current.classList.add('error');
-
-      hasError = true;
-    }
-    if (newINodeName === '') {
-      this.newINodeNameRef.current.classList.add('error');
-
-      hasError = true;
-    }
-    if (hasError) {
-      return;
-    }
+  public createNewINode(newINodeType: number | string, newINodeName: string): void {
 
     // Create new Dir | File
     const iNode = { ...this.state.iNode };
@@ -142,14 +89,14 @@ export class App extends React.Component<{}, AppState> {
 	_type: TYPES.FILE
       } as File;
     }
-    iNode.children.push(newChild);
+    iNode.children ? iNode.children.push(newChild) : iNode.children = [newChild];;
 
     this.setState({ iNode });
   }
 
   // TODO i broke it!
-  public start(): void {
-    const fileSystem = this.buildMock(this.state.initValue);
+  public start(initValue: number): void {
+    const fileSystem = this.buildMock(initValue);
 
     this.setState({fileSystem});
   }
@@ -211,9 +158,9 @@ export class App extends React.Component<{}, AppState> {
 const getRandomDate = (): Date => new Date(Date.now() - Math.ceil(Math.random() * 100000000000));
 
 // TODO types
-const FileDesc = (props: { file: File }) => {
+/*const File = (props: { file: File }) => {
   const { file } = props;
-  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+  const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' } as const;
 
   return (
     <div>
@@ -224,7 +171,7 @@ const FileDesc = (props: { file: File }) => {
     </div>
   )
 }
-
+*/
 export function start() {
   const rootElem = document.getElementById('main');
   render(<App />, rootElem);

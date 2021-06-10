@@ -1,2 +1,4 @@
-export { Nav, Directory, File, TYPES } from './Nav.tsx';
-export { Content } from './Content.tsx';
+export { FileSystem, Directory, File, TYPES } from './FileSystem';
+export { Content } from './Content';
+export { Header, HeaderProps } from './Header';
+export { FileDescriptor } from './FileDescriptor';

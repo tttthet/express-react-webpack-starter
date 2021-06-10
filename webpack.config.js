@@ -65,7 +65,7 @@ const frontendBuild = (name, entryFile, outputFile) => ({
         }]
     },
     mode: 'development',
-    devtool: 'cheap-module-eval-source-map',
+    devtool: 'cheap-module-source-map',
     resolve: resolveConfig,
     watch: IS_WATCH,
     devServer: {

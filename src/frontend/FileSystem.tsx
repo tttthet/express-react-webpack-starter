@@ -22,19 +22,19 @@ export const enum TYPES {
   DIR
 }
 
-interface NavProps {
+interface FileSystemProps {
   list: (Directory | File)[] | null;
   iNode: Directory | File;
   selected: {};
   onSelect(id: number, dir: Directory, selected: any): void;
 }
-interface NavState {
+
+interface FileSystemState {
   lastPosition: number;
-  items: (Directory | File)[] | null;
-  isOpen: boolean;
+  isDirectoryOpen: boolean;
 }
 
-export class Nav extends React.Component<NavProps, NavState> {
+export class FileSystem extends React.Component<FileSystemProps, FileSystemState> {
   private readonly COUNT: number;
   private currentScrollTop: number;
   private init: boolean;
@@ -42,8 +42,8 @@ export class Nav extends React.Component<NavProps, NavState> {
   public iconRef: RefObject<HTMLLIElement>;
   public isScrollable: boolean;
   private pinToBottom: boolean;
-  
-  constructor(props: NavProps) {
+
+  constructor(props: FileSystemProps) {
     super(props);
 
     this.scrollRef = React.createRef();
@@ -61,8 +61,7 @@ export class Nav extends React.Component<NavProps, NavState> {
 
     this.state = {
       lastPosition: 0,
-      items: props.list && props.list && props.list.slice(0, this.COUNT),
-      isOpen: false
+      isDirectoryOpen: false
     }
   }
 
@@ -74,12 +73,12 @@ export class Nav extends React.Component<NavProps, NavState> {
     this.scrollRef.current.removeEventListener('scroll', (event: Event) => this.handleScroll(event));
   }
 
-  componentDidUpdate(prevProps: NavProps, prevState: NavState) {
+  componentDidUpdate(prevProps: FileSystemProps, prevState: FileSystemState) {
     // handle end of scroll list
     if (!this.pinToBottom) {
       this.scrollRef.current.scrollTop = 20;
     }
-  }  
+  }
 
   public handleScroll(event: any): void {
     // skip the initial scrollTop assignment
@@ -106,19 +105,15 @@ export class Nav extends React.Component<NavProps, NavState> {
 
       const end = lastPosition + this.COUNT
       const { list } = this.props;
-      let items;
 
       if (end >= list.length) {
 	this.pinToBottom = true;
 	lastPosition = list.length - this.COUNT;
-	items = list.slice(lastPosition, end);
       } else {
-	items = list.slice(lastPosition, end);
 	lastPosition += 1;
       }
       this.setState({
 	lastPosition: lastPosition,
-	items: items
       });
     }
     // scrolling up
@@ -128,13 +123,9 @@ export class Nav extends React.Component<NavProps, NavState> {
 	return;
       }
       let { lastPosition } = this.state;
-      const end = lastPosition + this.COUNT
-      const { list } = this.props;
-      const items = list.slice(lastPosition, end);
 
       if (lastPosition === 0) {
 	this.setState({
-	  items: items
 	});
 	return;
       }
@@ -143,7 +134,6 @@ export class Nav extends React.Component<NavProps, NavState> {
 
       this.setState({
 	lastPosition: lastPosition - 1,
-	items: items
       });
     }
   }
@@ -151,17 +141,22 @@ export class Nav extends React.Component<NavProps, NavState> {
   // TODO split scrolling out from prop updates
   render() {
     const { list, iNode, selected } = this.props;
-    let { items } = this.state;
 
-    // kludge for new iNode
-    if (!list) {
-      items = null;;
+    let items: (Directory | File)[];
+    let cName: string;
+    // TODO probable performance bottlenech w/ large datasets
+    // new iNode
+    if (list) {
+      for (let i = 0; i < list.length; i++) {
+	let item = list[i];
+	if (item.id === iNode.id) {
+	  item.children = iNode.children;
+	  break;
+	}
+      }
+      items = list && list.slice(this.state.lastPosition, this.COUNT);
+      cName = this.isScrollable ? 'isScrollable' : null;
     }
-    else if (Math.abs(items.length - list.length) === 1) {
-      items = list;
-    }
-
-    const cName = this.isScrollable ? 'isScrollable' : null;
 
     return (
       <ul ref={this.scrollRef} className={cName}>
@@ -172,7 +167,7 @@ export class Nav extends React.Component<NavProps, NavState> {
 	  <li key={child.id} ref={this.iconRef} className={`icon ${child._type === TYPES.FILE ? 'fileIcon' : (child as Directory).isOpen ? 'openIcon' : 'closeIcon'}`}>
 	      <p onClick={e => this.onClick(e, child.id, child)}>{child.name}</p>
 	      {selected[child.id] &&
-	      <Nav
+	      <FileSystem
 	        list={child['children']}// TS2339
 	        selected={selected[child.id]}
 	        onSelect={(id, children) => this.onSelected(id, children)}
@@ -190,9 +185,7 @@ export class Nav extends React.Component<NavProps, NavState> {
     const { selected, onSelect } = this.props;
 
     selected[id] = child;
-
     onSelect(id, child, selected);
-
     this.isScrollable = false;
   }
 
@@ -203,7 +196,7 @@ export class Nav extends React.Component<NavProps, NavState> {
       child = child as Directory;
       child.isOpen = !child.isOpen;
 
-      if (this.state.isOpen) {
+      if (this.state.isDirectoryOpen) {
 	this.iconRef.current.classList.add('openIcon');
 	this.iconRef.current.classList.remove('closeIcon');
       } else {
@@ -213,7 +206,7 @@ export class Nav extends React.Component<NavProps, NavState> {
     }
 
     this.setState({
-      isOpen: !this.state.isOpen
+      isDirectoryOpen: !this.state.isDirectoryOpen
     })
 
     const { selected, onSelect } = this.props;
@@ -222,7 +215,7 @@ export class Nav extends React.Component<NavProps, NavState> {
 
       return;
     }
-    
+
     if (selected[id]) {
       delete selected[id];
     } else {

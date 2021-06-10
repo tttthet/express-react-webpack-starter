@@ -1,5 +1,8 @@
 :root {
   --header-heigth: 100px;
+  --open-directory-icon: "\f07c";
+  --closed-directory-icon: "\f07b";
+  --file-icon: "\f15c";
 }
 * {
   font-family: sans-serif;
@@ -96,7 +99,7 @@ nav {
   margin: 3rem;
   padding: 3rem;
   background-color: #ddd;
-}  
+}
 section {
   flex: 1;
   overflow: auto;
@@ -158,14 +161,20 @@ button:hover {
   zoom: 1.25;
 }
 .openIcon::before {
-  content: "\f65d";
+  content: var(--open-directory-icon);
 }
 .closeIcon::before {
-  content: "\f07b";
+  content: var(--closed-directory-icon);;
 }
 .fileIcon::before {
-  content: '\f15c';
+  content: var(--file-icon);
   margin-left: 3px;
+}
+.fileIconasGraphic::before {
+  content: var(--file-icon);
+  margin-left: 3px;
+  width: 30rem;
+  height: 30rem;
 }
 .isScrollable {
   flex: 1;

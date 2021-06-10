@@ -7,7 +7,7 @@ interface ContentProps {
 interface ContentState {
   lastPosition: number;
   items?: (Directory | File)[] | null;
-}  
+}
 
 export class Content extends React.Component<ContentProps, ContentState> {
   public myRef: RefObject<HTMLElement>;
@@ -15,7 +15,7 @@ export class Content extends React.Component<ContentProps, ContentState> {
   private init: boolean;
   private pinToBottom: boolean;
   private readonly COUNT: number;
-  
+
   constructor(props: ContentProps) {
     super(props);
 
@@ -25,12 +25,8 @@ export class Content extends React.Component<ContentProps, ContentState> {
     this.myRef = React.createRef();
     this.pinToBottom = false;
 
-    const { dir } = this.props;
-    const items = [...dir.children].slice(0, this.COUNT);
-
     this.state = {
       lastPosition: 0,
-      items: items
     }
   }
 
@@ -45,6 +41,13 @@ export class Content extends React.Component<ContentProps, ContentState> {
   componentWillUnmount() {
     this.myRef.current.removeEventListener('scroll', (event: Event) => this.handleScroll(event));
     this.setState({items: null});
+  }
+
+  componentDidUpdate(prevProps: ContentProps, prevState: ContentState) {
+    // handle end of scrolling content
+    if (!this.pinToBottom) {
+      this.myRef.current.scrollTop = 20;
+    }
   }
 
   public handleScroll(event: any) {
@@ -63,6 +66,7 @@ export class Content extends React.Component<ContentProps, ContentState> {
     let scrollTop = event.srcElement.scrollTop;
 
     if (scrollTop > this.currentScrollTop) {
+
       if (scrollTop < this.currentScrollTop) {
 	return;
       }
@@ -77,21 +81,18 @@ export class Content extends React.Component<ContentProps, ContentState> {
 	return;
       }
       const end = lastPosition + this.COUNT
-      let items;
       if (end >= dir.children.length) {
 	this.pinToBottom = true;
 	lastPosition = dir.children.length - this.COUNT;
-	items = (dir as Directory).children.slice(lastPosition, end);
       } else {
-	items = (dir as Directory).children.slice(lastPosition, end);
 	lastPosition += delta;
       }
       this.setState({
 	lastPosition: lastPosition,
-	items: items
       });
     }
     else if (scrollTop < this.currentScrollTop) {
+
       if (scrollTop < this.currentScrollTop - 20) {
 	return;
       }
@@ -101,18 +102,11 @@ export class Content extends React.Component<ContentProps, ContentState> {
 
       let { lastPosition } = this.state;
 
-      const end = lastPosition + this.COUNT
       const diff = this.currentScrollTop - scrollTop;
       const delta = Math.floor((Math.abs(diff) / (this.currentScrollTop)) * 10);
-      let items = (dir as Directory).children.slice(lastPosition, end);
-      if (items.length < this.COUNT) {
-	this.pinToBottom = true;
-	items = (dir as Directory).children.slice(-this.COUNT);
-      }
 
       if (lastPosition === 0) {
 	this.setState({
-	  items: items
 	});
 	return;
       }
@@ -121,42 +115,18 @@ export class Content extends React.Component<ContentProps, ContentState> {
 
       this.setState({
 	lastPosition: nextPosition,
-	items: items
       });
     }
   }
 
-  componentDidUpdate(prevProps: ContentProps, prevState: ContentState) {
-    // handle end of scrolling content
-    if (!this.pinToBottom) {
-      this.myRef.current.scrollTop = 20;
-    }
-  }  
-
   render() {
     const { dir } = this.props;
-    let { items } = this.state;
-
-    if (!dir.children) {
-      items = null;;
-    }
-    else if (Math.abs(items.length - dir.children.length) === 1) {
-      const itemIds = items.map(iNode => iNode.id);
-      const childIds = dir.children.map(iNode => iNode.id);
-      
-      //let notEqual = false;
-      loop: for (let i= 0; i < childIds.length; i++) {
-	if (!itemIds.includes(childIds[i])) {
-	  items = dir.children;
-	  break;
-	}
-      }
-    }
+    const items = dir.children && [...dir.children].slice(this.state.lastPosition, this.COUNT);
 
     return (
       <section ref={this.myRef}>
 	<ul>
-	{!items && !dir.children &&
+	{!items &&
           <p>This Directory is Empty.</p>
 	  }
         {items && items.map(inode => (
@@ -171,24 +141,23 @@ export class Content extends React.Component<ContentProps, ContentState> {
   }
 
   private setLastModified(inode: Directory | File) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
-
     if (inode._type === TYPES.DIR && (inode as Directory).children) {
       const lastModified = (inode as Directory).children.reduce(this.lastModifiedReducer, 0);
 
       if (lastModified) {
-	return (lastModified as Date).toLocaleDateString("en-US", options);
+	return (lastModified as Date).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
       }
       return '- -';
     }
     else {
       try {
-	return (inode as File).lastModified.toLocaleDateString("en-US", options);
+	return (inode as File).lastModified.toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' });
       } catch (e) {
 	return '- -';
       }
-    }	
+    }
   }
+
   private lastModifiedReducer(mostRecent: Date | number, child: any): Date | number {
     if (child !== 0 && child._type === TYPES.FILE && (+(child as File).lastModified > +mostRecent)) {
       mostRecent = (child as File).lastModified;
