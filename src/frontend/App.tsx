@@ -1,38 +1,40 @@
-import React, { RefObject } from 'react';
+import React from 'react';
 import { render } from 'react-dom';
 import './style.css';
 import { Content, FileSystem, Directory, File, TYPES, Header, HeaderProps, FileDescriptor, buildMock } from './';
 
 interface AppState {
-  iNode: Directory | File | null;// TODO normlalize
-  currentDirectory: Directory;// TODO normlalize
-  selected: any;// TODO type this
+  node: Directory | File | null;
+  selected: any;
   initValue: number;
   fileSystem: Directory[];
   newINodeType: string;
   newINodeName: string;
+  //parentCount: number; /* TODO finish expando dir height */
 }
 
-export class App extends React.Component<{ directoryCount: number }, AppState> {
+interface AppProps {
+  directoryCount: number;
+}
 
-  private scrollRef: RefObject<HTMLDivElement>;
+export class App extends React.Component<AppProps, AppState> {
+
   private INIT_DIRECTORY_COUNT: number;
+  //private parentCount: number;  /* TODO finish expando dir height */
 
-  constructor(props: any) {
+  constructor(props: AppProps) {
     super(props);
 
-    //const fileSystem = this.buildMock(5);
     const fileSystem = buildMock(5);
     this.INIT_DIRECTORY_COUNT = props.directoryCount;
-    this.scrollRef = React.createRef();
     this.state = {
-      currentDirectory: fileSystem[0] as Directory,// TODO dependency, need to support edge cases
-      iNode: fileSystem[0],// TODO dependency, need to support edge cases
+      node: fileSystem[0],// TODO dependency, need to support edge cases
       selected: {},
       initValue: null,
       fileSystem: fileSystem,
       newINodeType: '',
-      newINodeName: ''
+      newINodeName: '',
+      //parentCount: fileSystem.length /* TODO finish expando dir height */
     }
   }
 
@@ -41,40 +43,40 @@ export class App extends React.Component<{ directoryCount: number }, AppState> {
     const fileSystemvProps = {
       onSelect: (id: number, dir: Directory, selected: any): void => this.onSelectDirectory(dir, selected),
       list: this.state.fileSystem,
-      iNode: this.state.iNode,
+      node: this.state.node,
       selected: this.state.selected,
+      //parentCount: this.state.parentCount /* TODO finish expando dir height */
     }
 
     const HProps: HeaderProps = {
       initValue: this.INIT_DIRECTORY_COUNT,
-      start: this.start.bind(this),
+      initFileSystem: this.initFileSystem.bind(this),
       createNewINode: this.createNewINode.bind(this)
     }
 
-    const { iNode } = this.state;
+    const { node } = this.state;
 
     return (
       <>
 	<Header {...HProps} />
 	<main>
-          <div ref={this.scrollRef}>
+          <div>
 	    <FileSystem {...fileSystemvProps}/>
 	  </div>
-	  {iNode._type === TYPES.DIR &&
-	    <Content dir={iNode as Directory} />
+	  {node && (node._type === TYPES.DIR) &&
+            <Content dir={node as Directory | null} />
 	  }
-          {iNode._type === TYPES.FILE &&
-	    <FileDescriptor file={iNode as File} />
+          {node && (node._type === TYPES.FILE) &&
+	    <FileDescriptor file={node as File} />
 	  }
         </main>
       </>
     );
   }
 
+  // Create new Dir | File
   public createNewINode(newINodeType: number | string, newINodeName: string): void {
-
-    // Create new Dir | File
-    const iNode = { ...this.state.iNode };
+    const node = { ...this.state.node };
     let newChild: Directory | File;
 
     if (+newINodeType === TYPES.DIR) {
@@ -92,74 +94,30 @@ export class App extends React.Component<{ directoryCount: number }, AppState> {
 	_type: TYPES.FILE
       } as File;
     }
-    iNode.children ? iNode.children.push(newChild) : iNode.children = [newChild];;
+    node.children ? node.children.push(newChild) : node.children = [newChild];;
 
-    this.setState({ iNode });
+    this.setState({ node });
   }
 
-  // TODO i broke it!
-  public start(initValue: number): void {
-    //const fileSystem = this.buildMock(this.INIT_DIRECTORY_COUNT);
+  // init new directory structure
+  public initFileSystem(initValue: number): void {
     const fileSystem = buildMock(initValue);
 
-    console.log('stat', initValue);
-    console.log('fileSystem', fileSystem);
+    this.setState({
+      fileSystem,
+      node: fileSystem[0],
+      selected: {}
+      //parentCount: fileSystem.length /* TODO finish expando dir height */
+    });
 
-    this.setState({fileSystem});
   }
 
-  // TODO type 'dir' param
-  public onSelectDirectory(iNode: (Directory | File), selected: any): void {
+  public onSelectDirectory(node: (Directory | File), selected: any): void {
     this.setState({
-      currentDirectory: iNode as Directory,
-      iNode: iNode,
+      node: node,
       selected: selected,
     });
   }
-
-/*  private buildMock(initValue: number): Directory[] | null {
-    let k = 0;
-
-    function lots(begin: number) {
-      const items = []
-
-      for (let i = 0; i <= 299; i++) {
-	items.push({
-	  id: begin + i,
-	  name: 'file' + begin + i,
-	  _type: TYPES.FILE,
-	  lastModified: getRandomDate()
-	});
-      }
-
-      return items;
-    }
-
-    return (function build(i: number): Directory[] | null {
-      if (!i) return null;
-
-      return [...Array(i).keys()].reverse().map(j => {
-	k++;
-
-	if (j % 2) {
-	  return {
-	    id: k,
-	    name: 'file' + k,
-	    _type: TYPES.FILE,
-	    lastModified: getRandomDate()
-	  }
-	} else {
-	  return {
-	    id: k,
-	    name: 'dir' + k,
-	    _type: TYPES.DIR,
-	    children: i-- === init ? lots(k) : build(i),
-	    isOpen: false
-	  }
-	}
-      });
-    })(init);
-  }*/
 }
 
 export function start(count: number) {

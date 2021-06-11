@@ -1,6 +1,7 @@
 import React, { RefObject } from 'react';
+import { Scroller, ScrollPosition } from './';
+import { Subject } from 'rxjs';
 
-// TODO abstract these
 export interface Directory {
   id: number;
   name: string;
@@ -24,22 +25,24 @@ export const enum TYPES {
 
 interface FileSystemProps {
   list: (Directory | File)[] | null;
-  iNode: Directory | File;
+  node: Directory | File;
   selected: {};
+  //parentCount: number | null; /* TODO finish expando dir height */
   onSelect(id: number, dir: Directory, selected: any): void;
 }
 
 interface FileSystemState {
   lastPosition: number;
+  endPosition: number;
   isDirectoryOpen: boolean;
 }
 
 export class FileSystem extends React.Component<FileSystemProps, FileSystemState> {
 
   private readonly COUNT: number;
-  private currentScrollTop: number;
-  private init: boolean;
-  private pinToBottom: boolean;
+  private scroller: any;
+  private scrollSubject: Subject<ScrollPosition>;
+  //private myObserver; /* TODO finish expando dir height */
 
   public scrollRef: RefObject<HTMLUListElement>;
   public isScrollable: boolean;
@@ -48,114 +51,82 @@ export class FileSystem extends React.Component<FileSystemProps, FileSystemState
     super(props);
 
     this.scrollRef = React.createRef();
-    this.COUNT = 100;
-    this.currentScrollTop = 20;
-    this.init = false;
-    this.pinToBottom = false;
+    this.COUNT = 50;
+    this.scrollSubject = new Subject();
+    this.scrollSubject.subscribe(nextPosition => {
+      this.setState({
+	lastPosition: nextPosition.start,
+	endPosition: nextPosition.end
+      });
+    });
 
     const { list } = props;
 
+    // TODO abstract the constant
     if (list && list.length > 15) {
       this.isScrollable = true;
     }
 
+    this.scroller = new (Scroller as any)(this.COUNT, 20, this.scrollSubject, list.length);
+
+    /* TODO finish expando dir height
+    this.myObserver = new ResizeObserver(entries => {
+      console.log('resize', entries);
+    });*/
+
     this.state = {
       lastPosition: 0,
+      endPosition: this.COUNT,
       isDirectoryOpen: false
     }
   }
 
   componentDidMount() {
-    this.scrollRef.current.addEventListener('scroll', (event: Event) => this.handleScroll(event));
+    this.scroller.register(this.scrollRef);
+
+    /* TODO finish expando dir height
+    if (this.props.parentCount) {
+      console.log('this.scrollRef.current', this.scrollRef.current);
+      console.log('query', document.querySelector('main > div:first-child'));
+      console.log('query height', document.querySelector('main > div:first-child').clientHeight);
+      //console.log('this.scrollRef.parentElement.parentElement', this.scrollRef.parentElement.parentElement);
+      //console.log('this.scrollRef.parentElement.parentElement.parentElement', this.scrollRef.parentElement.parentElement.parentElement);
+
+      //this.scrollRef.current.style.height = document.querySelector('main > div:first-child').clientHeight - (this.props.parentCount * 20) + 'px';
+      let c = window.getComputedStyle(this.scrollRef.current);
+      this.containerHeight = +c.height.split('px')[0];
+      console.log('c', this.containerHeight);
+      this.scrollRef.current.style.height = (document.querySelector('main > div:first-child').clientHeight - this.containerHeight) + 'px';
+      //this.myObserver.observe(this.scrollRef.current);
+    }*/
   }
 
   componentWillUnmount() {
-    this.scrollRef.current.removeEventListener('scroll', (event: Event) => this.handleScroll(event));
+    this.scroller.unregister(this.scrollRef);
   }
 
   componentDidUpdate(prevProps: FileSystemProps, prevState: FileSystemState) {
-    // handle end of scroll list
-    if (!this.pinToBottom) {
-      this.scrollRef.current.scrollTop = 20;
-    }
+    this.scroller.didUpdate();
   }
 
-  public handleScroll(event: any): void {
-    // skip the initial scrollTop assignment
-    if (!this.init) {
-      this.init = true;
-      return;
-    }
-    this.pinToBottom = false;
-
-    let scrollTop = event.srcElement.scrollTop;
-
-    // scrolling down
-    if (scrollTop > this.currentScrollTop) {
-      if (scrollTop < this.currentScrollTop + 20 || this.pinToBottom) {
-	return;
-      }
-
-      let { lastPosition } = this.state;
-
-      if (lastPosition === 0) {
-	this.setState({ lastPosition: 1	});
-	return;
-      }
-
-      const end = lastPosition + this.COUNT
-      const { list } = this.props;
-
-      if (end >= list.length) {
-	this.pinToBottom = true;
-	lastPosition = list.length - this.COUNT;
-      } else {
-	lastPosition += 1;
-      }
-      this.setState({
-	lastPosition: lastPosition,
-      });
-    }
-    // scrolling up
-    else if (scrollTop < this.currentScrollTop) {
-
-      if (scrollTop < this.currentScrollTop - 20) {
-	return;
-      }
-      let { lastPosition } = this.state;
-
-      if (lastPosition === 0) {
-	this.setState({
-	});
-	return;
-      }
-      event.srcElement.scrollTop = 20;
-      this.currentScrollTop = 20;
-
-      this.setState({
-	lastPosition: lastPosition - 1,
-      });
-    }
-  }
-
-  // TODO split scrolling out from prop updates
   render() {
-    const { list, iNode, selected } = this.props;
+    const { list, node, selected } = this.props;
 
     let items: (Directory | File)[];
     let cName: string;
-    // TODO probable performance bottlenech w/ large datasets
-    // new iNode
-    if (list) {
+
+    // new node
+    if (list && node) {
       for (let i = 0; i < list.length; i++) {
 	let item = list[i];
-	if (item.id === iNode.id) {
-	  item.children = iNode.children;
+	if (item.id === node.id) {
+	  item.children = node.children;
 	  break;
 	}
       }
-      items = list && list.slice(this.state.lastPosition, this.COUNT);
-      cName = this.isScrollable ? 'isScrollable' : null;
+
+      items = list && list.slice(this.state.lastPosition, this.state.endPosition);
+      cName = this.isScrollable ? 'isScrollable filesystem' : null;
     }
 
     return (
@@ -171,7 +142,7 @@ export class FileSystem extends React.Component<FileSystemProps, FileSystemState
 	      list={child['children']}// TS2339
 	      selected={selected[child.id]}
 	      onSelect={(id, children) => this.onSelected(id, children)}
-	      iNode={iNode}
+	      node={node}
 	    />
 	    }
 	  </li>
@@ -180,7 +151,6 @@ export class FileSystem extends React.Component<FileSystemProps, FileSystemState
     );
   }
 
-  // TODO naming
   public onSelected(id: number, child: Directory | File): void {
     const { selected, onSelect } = this.props;
 

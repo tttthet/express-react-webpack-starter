@@ -2,7 +2,7 @@ import React, { RefObject, ChangeEvent, FocusEvent, useState } from 'react';
 
 export interface HeaderProps {
   initValue: number;
-  start(initValue: number): void;
+  initFileSystem(initValue: number): void;
   createNewINode(newINodeType: number | string, newINodeName: string): void;
 }
 
@@ -54,7 +54,7 @@ export const Header = (props: HeaderProps): JSX.Element => {
     <header>
       <div>
         <p>Number of directories at root, children are decremented until empty</p>
-        <button onClick={() => props.start(initValue)}>Start!</button>
+        <button onClick={() => props.initFileSystem(initValue)}>New file system!</button>
         <input type="text" value={initValue} onChange={e => setInitValue(+e.target.value)} placeholder={'Directory size'}/>
       </div>
       <div>

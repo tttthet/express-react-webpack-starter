@@ -1,33 +1,49 @@
 import React, { RefObject } from 'react';
-import { Directory, File, TYPES } from './';
+import { Directory, File, Scroller, ScrollPosition, TYPES } from './';
+import { Subject } from 'rxjs';
 
 interface ContentProps {
-  dir: Directory;
+  dir: Directory | null;
 }
 interface ContentState {
   lastPosition: number;
+  endPosition: number;
   items?: (Directory | File)[] | null;
 }
 
 export class Content extends React.Component<ContentProps, ContentState> {
-  public myRef: RefObject<HTMLElement>;
-  private currentScrollTop: number;
-  private init: boolean;
-  private pinToBottom: boolean;
+
+  private scrollRef: RefObject<HTMLUListElement>;
   private readonly COUNT: number;
+  private scroller: any;
+  private scrollSubject: Subject<ScrollPosition>;
+  private isScrollable: boolean;
 
   constructor(props: ContentProps) {
     super(props);
 
-    this.COUNT = 100;
-    this.currentScrollTop = 20;
-    this.init = false;
-    this.myRef = React.createRef();
-    this.pinToBottom = false;
+    this.COUNT = 50;
+    this.scrollRef = React.createRef();
+    this.scrollSubject = new Subject();
+    this.scrollSubject.subscribe(nextPosition => {
+      this.setState({
+	lastPosition: nextPosition.start,
+	endPosition: nextPosition.end
+      });
+    });
+
+    const { children } = props.dir;
+
+    if (children && children.length > 15) {
+      this.isScrollable = true;
+    }
 
     this.state = {
       lastPosition: 0,
+      endPosition: this.COUNT,
     }
+
+    this.scroller = new (Scroller as any)(this.COUNT, 20, this.scrollSubject, children.length);
   }
 
   shouldComponentUpdate(nextProps: ContentProps, nextState: ContentState) {
@@ -35,108 +51,46 @@ export class Content extends React.Component<ContentProps, ContentState> {
   }
 
   componentDidMount() {
-    this.myRef.current.addEventListener('scroll', (event: Event) => this.handleScroll(event));
+    this.props.dir && this.scroller.register(this.scrollRef);
+
+    this.scrollRef.current.scrollTop = 20;
   }
 
   componentWillUnmount() {
-    this.myRef.current.removeEventListener('scroll', (event: Event) => this.handleScroll(event));
+    this.props.dir && this.scroller.unregister(this.scrollRef);
     this.setState({items: null});
   }
 
   componentDidUpdate(prevProps: ContentProps, prevState: ContentState) {
-    // handle end of scrolling content
-    if (!this.pinToBottom) {
-      this.myRef.current.scrollTop = 20;
-    }
+    this.scroller.didUpdate();
   }
 
-  public handleScroll(event: any) {
-    // skip the initial scrollTop assignment
-    if (!this.init) {
-      this.init = true;
-      return;
-    }
-    const { dir } = this.props;
-    if (!(dir as Directory).children) {
-      this.setState({ items: null });
-      return;
-    }
-    this.pinToBottom = false;
-
-    let scrollTop = event.srcElement.scrollTop;
-
-    if (scrollTop > this.currentScrollTop) {
-
-      if (scrollTop < this.currentScrollTop) {
-	return;
-      }
-
-      const current = this.currentScrollTop;
-      const delta = Math.floor(scrollTop / current);
-
-      let { lastPosition } = this.state;
-
-      if (lastPosition === 0) {
-	this.setState({ lastPosition: 1 });
-	return;
-      }
-      const end = lastPosition + this.COUNT
-      if (end >= dir.children.length) {
-	this.pinToBottom = true;
-	lastPosition = dir.children.length - this.COUNT;
-      } else {
-	lastPosition += delta;
-      }
-      this.setState({
-	lastPosition: lastPosition,
-      });
-    }
-    else if (scrollTop < this.currentScrollTop) {
-
-      if (scrollTop < this.currentScrollTop - 20) {
-	return;
-      }
-      if (this.pinToBottom) {
-	return;
-      }
-
-      let { lastPosition } = this.state;
-
-      const diff = this.currentScrollTop - scrollTop;
-      const delta = Math.floor((Math.abs(diff) / (this.currentScrollTop)) * 10);
-
-      if (lastPosition === 0) {
-	this.setState({
-	});
-	return;
-      }
-
-      const nextPosition = delta && lastPosition - delta > 0 ? lastPosition - delta : lastPosition - 1;
-
-      this.setState({
-	lastPosition: nextPosition,
-      });
-    }
-  }
 
   render() {
     const { dir } = this.props;
-    const items = dir.children && [...dir.children].slice(this.state.lastPosition, this.COUNT);
+    const items = dir && dir.children && [...dir.children].slice(this.state.lastPosition, this.state.endPosition);
+    const cName = this.isScrollable ? 'isScrollable content' : '';
 
     return (
-      <section ref={this.myRef}>
-	<ul>
+      <>
 	{!items &&
           <p>This Directory is Empty.</p>
-	  }
-        {items && items.map(inode => (
-	  <li key={inode.id}>
-	    <span>{inode.name}</span>
-	    <span>{this.setLastModified(inode)}</span>
-	  </li>
-	))}
-        </ul>
-      </section>
+	}
+	{dir &&
+	<section>
+	  <div>
+	  <ul ref={this.scrollRef} className={cName}>
+          {items && items.map(inode => (
+	    <li key={inode.id}>
+	      <span>{inode.name}</span>
+	      <span>{this.setLastModified(inode)}</span>
+	    </li>
+	  ))}
+	  </ul>
+	  </div>
+	</section>
+	}
+      </>
     );
   }
 

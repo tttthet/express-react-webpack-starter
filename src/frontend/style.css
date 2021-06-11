@@ -32,21 +32,26 @@ main > div:first-child {
   border-right: 5px dashed lightskyblue;
   border-top-right-radius: 3rem;
   background-color: #999;
+  overflow-y: hidden;
 }
 main > div:first-child ul {
   list-style: none;
 }
 main > div:first-child > ul {
-  margin: 40px 0 0;
+  padding-top: 40px;
+  margin-top: 0;
+  margin-bottom: 0;
+  box-sizing: border-box;
 }
 main > div:first-child > ul ul {
   padding-left: 20px;
 }
 main > div:first-child ul li {
-  padding: 3px 0;
+  padding: 5px 0 0;
 }
 main > div:first-child ul li p {
   padding-top: 2px;
+  padding-bottom: 5px;
 }
 main > div:first-child ul li p:hover {
   cursor: pointer;
@@ -78,7 +83,7 @@ main > div:last-child p:last-child > span {
 main > div:last-child > div {
   width: 400px;
   padding: 3rem;
-  margin-top: 300px;
+  margin-top: 20%;
 }
 main > div > p {
   border-bottom: 1px solid black;
@@ -106,24 +111,28 @@ nav {
 }
 section {
   flex: 1;
-  overflow: auto;
-  height: calc(100vh - var(--header-heigth));
   width: 100%;
   text-align: center;
   border-top: 5px dashed lightskyblue;
   border-top-left-radius: 3rem;
   background-color: #999;
+  box-sizing: border-box;
 }
 section::-webkit-scrollbar {
   background-color: #999;
 }
-section > ul {
-  padding: 50px 3rem;
-  list-style: none;
+section > div {
+  margin-top: 50px;
 }
-section > ul > li {
+section > div > ul {
+  height: calc(100vh - var(--header-heigth) - 50px);
+  padding: 0 3rem 1rem 3rem;
+  list-style: none;
+  margin: 0;
+}
+section > div > ul > li {
   display: flex;
-  height: 20px;
+  height: 30px;
   justify-content: space-between;
   align-items: center;
 }
@@ -161,6 +170,7 @@ button:hover {
 .file-context {
   display: flex;
   justify-content: center;
+  padding-bottom: 2rem;
 }
 .file-context > .icon {
   font-size: 13rem;
@@ -188,11 +198,13 @@ button:hover {
   width: 30rem;
   height: 30rem;
 }
+.isScrollable.filesystem {
+  height: 50vh;
+}
 .isScrollable {
   flex: 1;
   overflow: auto;
-  overflow: auto;
-  height: 800px;
+  box-sizing: border-box;
 }
 .isScrollable::-webkit-scrollbar {
   background-color: #999;

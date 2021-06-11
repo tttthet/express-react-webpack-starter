@@ -3,3 +3,4 @@ export { Content } from './Content';
 export { Header, HeaderProps } from './Header';
 export { FileDescriptor } from './FileDescriptor';
 export { buildMock } from './mock';
+export { Scroller, ScrollPosition } from './scroller';

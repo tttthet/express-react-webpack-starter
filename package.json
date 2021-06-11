@@ -39,6 +39,7 @@
   "dependencies": {
     "css-loader": "^5.2.6",
     "express": "^4.17.1",
+    "rxjs": "^7.1.0",
     "style-loader": "^2.0.0"
   }
 }
